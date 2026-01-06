@@ -39,8 +39,7 @@ export default function Login() {
               try {
                 setError("");
                 await login(email, password);
-                // land on the jobs list for both roles; managers can navigate to chat/create job
-                nav("/jobs");
+                window.location.reload();
               } catch (e: any) {
                 setError(e.message || "Invalid email or password");
               }
@@ -49,8 +48,10 @@ export default function Login() {
             Login
           </button>
 
-          <div style={{ opacity: 0.85 }}>
-            Don’t have an account? <Link to="/register">Register</Link>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, opacity: 0.85 }}>
+            <span>Don’t have an account? <Link to="/register">Register</Link></span>
+            <span><Link to="/">Back</Link></span>
+            <span><a href="#" onClick={() => nav('/forgot-password')}>Forgot password?</a></span>
           </div>
         </div>
 

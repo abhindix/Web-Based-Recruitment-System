@@ -28,7 +28,7 @@ export default function Register() {
             setErr("");
             try {
               await register({ email, full_name: fullName, password, role });
-              nav("/login");
+              window.location.reload();
             } catch (e: any) {
               setErr(e.message);
             }
@@ -36,6 +36,9 @@ export default function Register() {
         >
           Register
         </button>
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <button className="btn" onClick={() => nav(-1)}>Back</button>
       </div>
     </div>
   );

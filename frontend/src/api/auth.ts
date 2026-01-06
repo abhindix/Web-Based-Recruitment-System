@@ -1,7 +1,9 @@
 import { api } from "./client";
 
 export async function register(payload: { email: string; full_name: string; password: string; role: "manager" | "applicant" }) {
-  return api("/auth/register", { method: "POST", body: JSON.stringify(payload) });
+  const res = await api("/auth/register", { method: "POST", body: JSON.stringify(payload) });
+  if (res && res.role) localStorage.setItem("role", res.role);
+  return res;
 }
 
 export async function login(email: string, password: string) {
@@ -24,7 +26,7 @@ export async function login(email: string, password: string) {
 
   // 🔐 Store token
   localStorage.setItem("token", data.access_token)
-  localStorage.setItem("role", data.role)
+  if (data.role) localStorage.setItem("role", data.role)
 
   return data
 }

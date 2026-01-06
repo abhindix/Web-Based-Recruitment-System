@@ -1,14 +1,13 @@
-import { apiFetch } from "../api";
+import { api } from "../api/client";
 
-const sendMessage = async () => {
+const sendMessage = async (msg: string, setMessages: any, setError: any) => {
   try {
-    const data = await apiFetch("/chat", {
+    const data = await api("/chat", {
       method: "POST",
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ messages: [{ role: "user", content: msg }] }),
     });
-
-    setMessages((m) => [...m, { role: "assistant", text: data.reply }]);
+    setMessages((m: any[]) => [...m, { role: "assistant", text: data.reply }]);
   } catch (e) {
-    setError("Please login as a hiring manager");
+    setError && setError("Please login as a hiring manager");
   }
 };

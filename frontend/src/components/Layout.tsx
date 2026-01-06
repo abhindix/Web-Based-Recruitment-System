@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
-import { clearToken, getToken } from "../api/client";
+import { getToken } from "../api/client";
+import { clearToken } from "../auth";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const nav = useNavigate();

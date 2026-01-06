@@ -3,7 +3,7 @@ import { api } from "./client";
 export type Job = { id: number; role_title: string; requirements: string; indicative_salary?: number | null; hiring_manager_id: number };
 
 export function listJobs() {
-  return api<Job[]>("/jobs");
+  return api("/jobs");
 }
 
 export async function createJob(payload: any) {
