@@ -8,10 +8,9 @@ export default function ManagerChat() {
   async function send() {
     if (!input.trim()) return;
     setMessages((m) => [...m, { role: "user", text: input }]);
-    const text = input;
+    const userMsg = { role: "user", content: input };
     setInput("");
-
-    const res = await sendChat(text);
+    const res = await sendChat([userMsg]);
     setMessages((m) => [...m, { role: "assistant", text: res.reply }]);
   }
 

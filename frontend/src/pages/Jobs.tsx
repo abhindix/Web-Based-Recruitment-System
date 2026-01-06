@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { listJobs, Job } from "../api/jobs";
 import { Link } from "react-router-dom";
+const role = localStorage.getItem("role");
 
 export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -41,7 +42,7 @@ export default function Jobs() {
             </div>
 
             <hr />
-            <Link className="btn" to={`/apply/${j.id}`}>Apply</Link>
+            {role === "applicant" && <Link className="btn" to={`/apply/${j.id}`}>Apply</Link>}
           </div>
         ))}
       </div>

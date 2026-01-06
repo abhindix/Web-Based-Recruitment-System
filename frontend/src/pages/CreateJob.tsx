@@ -12,7 +12,12 @@ export default function CreateJob() {
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setMsg(null)
-    await api("/jobs", { method: "POST", body: JSON.stringify({ title, requirements, salary }) })
+    const payload = {
+      role_title: title,
+      requirements,
+      indicative_salary: salary ? parseInt(salary, 10) : null
+    };
+    await api("/jobs", { method: "POST", body: JSON.stringify(payload) })
     setTitle(""); setReq(""); setSalary("")
     setMsg("Job created ✅")
   }

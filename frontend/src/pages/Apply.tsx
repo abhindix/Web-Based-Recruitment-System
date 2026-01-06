@@ -18,7 +18,7 @@ export default function Apply() {
   useEffect(() => {
     (async () => {
       const jobs = await listJobs();
-      setJob(jobs.find((j) => j.id === id) || null);
+      setJob(jobs.find((j: any) => j.id === id) || null);
     })();
   }, [id]);
 
