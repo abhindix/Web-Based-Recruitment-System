@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+alembic
+psycopg2-binary
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+aiofiles
+httpx
+pydantic-settings
+email-validator
+aiosmtplib
+passlib[bcrypt]==1.7.4
+bcrypt==3.2.2
