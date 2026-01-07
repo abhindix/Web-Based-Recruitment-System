@@ -11,7 +11,15 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 def verify_password(password: str, hashed: str) -> bool:
-    return pwd_context.verify(password, hashed)
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    try:
+        result = pwd_context.verify(password, hashed)
+        logging.debug(f"Password verification for password='{password}': {result}")
+        return result
+    except Exception as e:
+        logging.error(f"Password verification error: {e}")
+        return False
 
 def create_access_token(user_id: int, role: str) -> str:
     """Create a JWT access token.

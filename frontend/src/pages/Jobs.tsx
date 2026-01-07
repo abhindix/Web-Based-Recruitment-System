@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
-import { listJobs, Job } from "../api/jobs";
+import { listJobs, Job, listJobsWithApplicants } from "../api/jobs";
 import { Link } from "react-router-dom";
 const role = localStorage.getItem("role");
 
 export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobsWithApplicants, setJobsWithApplicants] = useState<any[]>([]);
   const [err, setErr] = useState("");
 
   useEffect(() => {
     (async () => {
       try {
         setJobs(await listJobs());
+        if (role === "manager") {
+          setJobsWithApplicants(await listJobsWithApplicants());
+        }
       } catch (e: any) {
         setErr(e.message);
       }
@@ -26,25 +30,32 @@ export default function Jobs() {
       </div>
 
       <div className="grid2">
-        {jobs.map((j) => (
-          <div className="card" key={j.id}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 800 }}>{j.role_title}</div>
-                <div style={{ opacity: 0.8, marginTop: 6, whiteSpace: "pre-wrap" }}>{j.requirements}</div>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <div className="badge">Job #{j.id}</div>
-                <div style={{ marginTop: 8, opacity: 0.9 }}>
-                  {j.indicative_salary ? `₹${j.indicative_salary.toLocaleString()} / yr` : "Salary: TBD"}
+        {jobs.map((j) => {
+          const applicants = jobsWithApplicants.find((a) => a.job_id === j.id)?.applicants || [];
+          return (
+            <div className="card" key={j.id}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 800 }}>{j.role_title}</div>
+                  <div style={{ opacity: 0.8, marginTop: 6, whiteSpace: "pre-wrap" }}>{j.requirements}</div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div className="badge">Job #{j.id}</div>
+                  <div style={{ marginTop: 8, opacity: 0.9 }}>
+                    {j.indicative_salary ? `₹${j.indicative_salary.toLocaleString()} / yr` : "Salary: TBD"}
+                  </div>
                 </div>
               </div>
+              {role === "manager" && (
+                <div style={{ marginTop: 10, fontSize: 14, color: '#555' }}>
+                  <b>Applicants:</b> {applicants.length > 0 ? applicants.join(", ") : "None"}
+                </div>
+              )}
+              <hr />
+              {role === "applicant" && <Link className="btn" to={`/apply/${j.id}`}>Apply</Link>}
             </div>
-
-            <hr />
-            {role === "applicant" && <Link className="btn" to={`/apply/${j.id}`}>Apply</Link>}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

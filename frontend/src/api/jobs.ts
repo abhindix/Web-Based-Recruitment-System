@@ -1,3 +1,6 @@
+export async function listJobsWithApplicants() {
+  return api("/jobs/applicants");
+}
 import { api } from "./client";
 
 export type Job = { id: number; role_title: string; requirements: string; indicative_salary?: number | null; hiring_manager_id: number };
