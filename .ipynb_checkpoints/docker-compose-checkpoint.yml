@@ -18,23 +18,37 @@ services:
       retries: 5
 
   backend:
-    build: .
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    build: ./backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
       db:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql+psycopg2://app:app@db:5432/recruitment
       JWT_SECRET: "dev_super_secret_change_me"
-      # Optional: set to your OpenAI-compatible endpoint/key (LM Studio works)
+      # LM Studio (runs on your host). Keep LM Studio's "Local Server" enabled.
       LLM_BASE_URL: "http://host.docker.internal:1234/v1"
       LLM_API_KEY: "lm-studio"
-      # Example model id - change to whatever LM Studio exposes
+      # Change to the exact model id/name shown in LM Studio's server logs.
       LLM_MODEL: "openai/gpt-oss-20b"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    volumes:
+      - ./backend:/app
     ports:
       - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
 
 volumes:
   pgdata:
