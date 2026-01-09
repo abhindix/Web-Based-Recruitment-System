@@ -7,14 +7,15 @@ from sqlalchemy.exc import ProgrammingError
 from app.core.config import settings
 from app.services.sql_safety import validate_sql
 from app.crud import job as job_crud
+from app.crud.agent_memory import add_memory, get_recent_memory
 
 
 # ==========================================================
-# SCHEMA INTROSPECTION (CORRECT + SAFE)
+# SCHEMA INTROSPECTION
 # ==========================================================
 
 def load_db_schema(db: Session) -> str:
-    engine = db.get_bind()  # IMPORTANT: inspect ENGINE, not Session
+    engine = db.get_bind()
     inspector = inspect(engine)
 
     lines = []
@@ -28,38 +29,46 @@ def load_db_schema(db: Session) -> str:
 
 
 # ==========================================================
-# SYSTEM PROMPT (AGENTIC + SCHEMA LOCKED)
+# SYSTEM PROMPT (WITH MEMORY)
 # ==========================================================
 
-def build_system_prompt(schema: str) -> str:
+def build_system_prompt(schema: str, memory: list[dict]) -> str:
+    memory_block = "\n".join(
+        [f"{m['role'].upper()}: {m['content']}" for m in memory]
+    )
+
     return f"""
-You are an autonomous hiring-manager assistant.
+You are an autonomous hiring-manager assistant with MEMORY.
 
-You are an AGENT, not a chatbot.
+====================
+PAST CONVERSATION MEMORY
+====================
+{memory_block or "No prior memory."}
 
-DATABASE SCHEMA (single source of truth):
+====================
+DATABASE SCHEMA
+====================
 {schema}
 
 RULES:
-- Never guess table or column names
+- Never guess tables or columns
 - Use ONLY the schema above
 - Use SELECT-only SQL
 - Prefer COUNT before listing rows
-- If data does not exist, explain clearly
-- If information is missing, ask a follow-up question
+- Use memory to provide contextual follow-ups
+- If the user refers to "last time" or "previous job", use memory
 
-Always think step-by-step and return structured data internally.
+Respond clearly and helpfully.
 """.strip()
 
 
 # ==========================================================
-# HUMAN OUTPUT RENDERER (NO JSON IN UI)
+# HUMAN OUTPUT RENDERER
 # ==========================================================
 
 def render_manager_response(obj: dict) -> str:
     lines = []
 
-    # Latest jobs
     if "latest_jobs" in obj:
         jobs = obj.get("latest_jobs", [])
         if not jobs:
@@ -70,11 +79,8 @@ def render_manager_response(obj: dict) -> str:
         for job in jobs:
             lines.append(f"Role: {job.get('role_title')}")
             lines.append(f"Requirements: {job.get('requirements')}")
-
             salary = job.get("indicative_salary")
-            lines.append(
-                f"Salary: ₹{salary}" if salary else "Salary: Not specified"
-            )
+            lines.append(f"Salary: ₹{salary}" if salary else "Salary: Not specified")
 
             applicants = job.get("applicants")
             if not applicants:
@@ -86,7 +92,6 @@ def render_manager_response(obj: dict) -> str:
 
         return "\n".join(lines)
 
-    # Generic summary
     if "summary" in obj:
         return obj["summary"]
 
@@ -159,7 +164,7 @@ TOOLS = [
 
 
 # ==========================================================
-# AGENT LOOP (MULTI-STEP + SELF-HEALING)
+# AGENT LOOP WITH MEMORY
 # ==========================================================
 
 async def run_manager_agent(
@@ -168,24 +173,32 @@ async def run_manager_agent(
     chat_messages: list[dict],
 ) -> tuple[str, dict | None]:
 
-    if not settings.LLM_API_KEY:
-        return "LLM not configured.", None
+    # 🔹 Load memory
+    memory_rows = get_recent_memory(db, hiring_manager_id, limit=10)
+    memory = [{"role": m.role, "content": m.content} for m in memory_rows]
 
     schema = load_db_schema(db)
-    system_prompt = build_system_prompt(schema)
+    system_prompt = build_system_prompt(schema, memory)
 
     messages = [{"role": "system", "content": system_prompt}] + chat_messages
     collected_rows = []
+
+    # 🔹 Store user message in memory
+    for m in chat_messages:
+        if m["role"] == "user":
+            add_memory(db, hiring_manager_id, "user", m["content"])
 
     for _ in range(5):
         response = await llm_call(messages, TOOLS)
         msg = response["choices"][0]["message"]
 
-        # ======================
         # FINAL ANSWER
-        # ======================
         if not msg.get("tool_calls"):
             content = msg.get("content", "")
+
+            # 🔹 Store assistant response
+            add_memory(db, hiring_manager_id, "assistant", content)
+
             try:
                 structured = json.loads(content)
                 pretty = render_manager_response(structured)
@@ -197,9 +210,6 @@ async def run_manager_agent(
         name = tool["function"]["name"]
         args = json.loads(tool["function"]["arguments"])
 
-        # ======================
-        # CREATE JOB
-        # ======================
         if name == "create_job":
             job = job_crud.create_job(
                 db=db,
@@ -221,9 +231,6 @@ async def run_manager_agent(
             })
             continue
 
-        # ======================
-        # QUERY DB (SELF-HEALING)
-        # ======================
         if name == "query_db":
             sql = validate_sql(args["sql"])
 
@@ -234,11 +241,7 @@ async def run_manager_agent(
                 messages.append(msg)
                 messages.append({
                     "role": "system",
-                    "content": (
-                        "The previous SQL failed. "
-                        "Fix it using ONLY the schema. "
-                        "If impossible, ask a follow-up question."
-                    ),
+                    "content": "Fix the SQL using ONLY the schema or ask a follow-up question.",
                 })
                 continue
 
