@@ -1,13 +1,17 @@
 from pydantic import BaseModel
+from typing import List, Optional
+
 
 class ChatMessage(BaseModel):
-    role: str  # "user" | "assistant" | "system"
+    role: str
     content: str
 
+
 class ChatRequest(BaseModel):
-    messages: list[ChatMessage] | None = None 
-    message: str | None = None
+    messages: Optional[List[ChatMessage]] = None
+    message: Optional[str] = None
+
 
 class ChatResponse(BaseModel):
     reply: str
-    data: dict | None = None
+    data: Optional[dict] = None
