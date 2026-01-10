@@ -8,9 +8,7 @@ class AgentMemory(Base):
     __tablename__ = "agent_memory"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
-
-    role = Column(Text, nullable=False)  # "user" or "assistant"
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    role = Column(Text, nullable=False)
     content = Column(Text, nullable=False)
-
     created_at = Column(DateTime(timezone=True), server_default=func.now())
