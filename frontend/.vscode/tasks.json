@@ -18,6 +18,18 @@
 			"command": "npm run build",
 			"isBackground": false,
 			"group": "build"
+<<<<<<< HEAD
+=======
+		},
+		{
+			"label": "Build frontend (Vite)",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+>>>>>>> main
 		}
 	]
 }

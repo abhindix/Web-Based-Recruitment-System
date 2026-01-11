@@ -33,6 +33,12 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   return children;
 }
 
+function RequireRole({ role, children }: { role: string; children: JSX.Element }) {
+  const userRole = localStorage.getItem("role");
+  if (userRole !== role) return <Navigate to="/jobs" replace />;
+  return children;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -77,7 +83,9 @@ export default function App() {
             path="/create-job"
             element={
               <RequireAuth>
-                <CreateJob />
+                <RequireRole role="manager">
+                  <CreateJob />
+                </RequireRole>
               </RequireAuth>
             }
           />
@@ -85,7 +93,9 @@ export default function App() {
             path="/chat"
             element={
               <RequireAuth>
-                <Chat />
+                <RequireRole role="manager">
+                  <Chat />
+                </RequireRole>
               </RequireAuth>
             }
           />

@@ -1,0 +1,30 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Install backend requirements",
+			"type": "shell",
+			"command": "pip install -r requirements.txt",
+			"args": [],
+			"group": "build"
+		},
+		{
+			"label": "Build backend (Docker Compose)",
+			"type": "shell",
+			"command": "docker-compose build",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Build backend (Python)",
+			"type": "shell",
+			"command": "pip install -r requirements.txt",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}
