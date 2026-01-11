@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     # (e.g., http://localhost:1234/v1/chat/completions).
     LLM_BASE_URL: str = "http://host.docker.internal:1234/v1"
     # Leave empty to run the app without an LLM.
-    LLM_API_KEY: str = "lm-studio"
+    LLM_API_KEY: str = ""
     LLM_MODEL: str = "openai/gpt-oss-20b"
 
 settings = Settings()

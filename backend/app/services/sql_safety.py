@@ -2,7 +2,7 @@ import re
 
 DISALLOWED = re.compile(r"\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|CREATE|GRANT|REVOKE)\b", re.IGNORECASE)
 
-ALLOWED_TABLES = {"jobs", "applications", "users", "files", "applicants",}
+ALLOWED_TABLES = {"jobs", "applications", "users", "files"}
 
 def _normalize_identifier(token: str) -> str:
     """
