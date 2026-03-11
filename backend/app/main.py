@@ -9,15 +9,13 @@ from . import models  # noqa: F401
 from .api.routes import auth, jobs, applications, chat
 from .models.user import User
 from .core.security import get_password_hash
+from .core.config import settings
 
 app = FastAPI(title="Recruitment System API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,12 +33,14 @@ app.include_router(applications)
 app.include_router(chat)
 
 def seed_admin_user():
+    if not settings.SEED_ADMIN_EMAIL or not settings.SEED_ADMIN_PASSWORD:
+        return
     db = SessionLocal()
-    exists = db.query(User).filter(User.email == "admin@test.com").first()
+    exists = db.query(User).filter(User.email == settings.SEED_ADMIN_EMAIL).first()
     if not exists:
         admin = User(
-            email="admin@test.com",
-            hashed_password=get_password_hash("admin123"),
+            email=settings.SEED_ADMIN_EMAIL,
+            hashed_password=get_password_hash(settings.SEED_ADMIN_PASSWORD),
             role="manager",
         )
         db.add(admin)
