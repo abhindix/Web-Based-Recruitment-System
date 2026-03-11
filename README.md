@@ -138,3 +138,9 @@ alembic upgrade head
 ## Environment Variables Reference
 
 See [`.env.example`](.env.example) for the full list with descriptions.
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
