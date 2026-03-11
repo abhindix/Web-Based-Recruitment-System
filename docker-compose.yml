@@ -5,14 +5,14 @@ services:
     image: postgres:16
     environment:
       POSTGRES_DB: recruitment
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: app
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app -d recruitment"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app} -d recruitment"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -24,13 +24,15 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+psycopg2://app:app@db:5432/recruitment
-      JWT_SECRET: "dev_super_secret_change_me"
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD}@db:5432/recruitment
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
       # LM Studio (runs on your host). Keep LM Studio's "Local Server" enabled.
-      LLM_BASE_URL: "http://host.docker.internal:1234/v1"
-      LLM_API_KEY: "lm-studio"
-      # Change to the exact model id/name shown in LM Studio's server logs.
-      LLM_MODEL: "openai/gpt-oss-20b"
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://host.docker.internal:1234/v1}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-openai/gpt-oss-20b}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
